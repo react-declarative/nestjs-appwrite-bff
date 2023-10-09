@@ -9,7 +9,7 @@
 ## The problem
 
 Currently AppWrite [does not support Long Polling instead of WebSocket](
-https://github.com/appwrite/appwrite/issues/5631). This is critical if you want to use [Ngrok](https://ngrok.com). Also, using additional microservices together with the AppWrite functions is a must have feature for API integration to other systems: What if we need to cache some data in Redis before writing into the production database?
+https://github.com/appwrite/appwrite/issues/5631). This is critical if you want to use [Ngrok](https://ngrok.com). Also, using additional microservices together with the AppWrite functions is a must have feature for API integration to other systems: What if we need to cache some data in Redis before writing It into the production database?
 
 ## Solution
 

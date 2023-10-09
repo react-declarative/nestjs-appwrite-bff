@@ -2,6 +2,10 @@
 
 > AppWrite PWA bootstrap starter kit
 
+<a href="https://cloud.appwrite.io/card/64b53d046c81edba0b1a">
+	<img width="350" src="https://cloud.appwrite.io/v1/cards/cloud?userId=64b53d046c81edba0b1a" alt="Appwrite Cloud Card" />
+</a>
+
 ## The problem
 
 Currently AppWrite [does not support Long Polling instead of WebSocket](

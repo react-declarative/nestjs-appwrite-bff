@@ -1,73 +1,68 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# nestjs-appwrite-bff
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> AppWrite PWA bootstrap starter kit
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## The problem
 
-## Description
+Currently AppWrite [does not support Long Polling instead of WebSocket](
+https://github.com/appwrite/appwrite/issues/5631). This is critical if you want to use [Ngrok](https://ngrok.com). Also, using additional microservices together with the AppWrite functions is a must have feature for API integration to other systems: What if we need to cache some data in Redis before writing into the production database?
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Solution
 
-## Installation
+You can use `createProxyMiddleware` with Express web server to connect your PWA with backend microservices. Also this tool restream AppWrite Realtime events by using [sockjs-client](https://www.npmjs.com/package/sockjs-client)
 
-```bash
-$ npm install
+```typescript
+import AppwriteService from "./AppwriteService";
+import { CC_APPWRITE_EVENT_RESTREAMER_URL } from "../../../config/params";
+import Socket from "sockjs-client";
+import TYPES from "../../types";
+import { inject } from "react-declarative";
+import { makeObservable } from "mobx";
+
+type RealtimeResponseEvent<T extends unknown> = {
+  events: string[];
+  channels: string[];
+  timestamp: number;
+  payload: T;
+};
+
+export class RealtimeService {
+  readonly appwriteService = inject<AppwriteService>(TYPES.appwriteService);
+
+  constructor() {
+    makeObservable(this, {});
+  }
+
+  subscribe = <T extends unknown>(
+    channels: string | string[],
+    callback: (payload: RealtimeResponseEvent<T>) => void
+  ) => {
+    if (CC_APPWRITE_EVENT_RESTREAMER_URL) {
+      const socket = new Socket(CC_APPWRITE_EVENT_RESTREAMER_URL);
+
+      socket.onopen = () => {
+        socket.send(JSON.stringify(channels));
+      };
+
+      socket.onerror = (error) => {
+        console.error(error);
+      };
+
+      socket.onmessage = (msg) => {
+        const payload = JSON.parse(msg.data);
+        callback(payload);
+      };
+
+      socket.onclose = (...args) => {
+        console.log("socket closed", { args });
+      };
+
+      return () => socket.close();
+    }
+    return this.appwriteService.client.subscribe(channels, callback);
+  };
+}
+
+export default RealtimeService;
 ```
 
-## Running the app
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).

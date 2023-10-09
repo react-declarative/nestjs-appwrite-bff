@@ -22,19 +22,21 @@ export const appwriteRealtime = (app: INestApplication, server: Server) => {
             client.write(JSON.stringify(payload), (err) => {
               if (err) {
                 subscription && subscription.unsubscribe();
-                client.close('500');
+                client.close('501');
               }
             });
           },
-          error: () => {
+          error: (error) => {
+            console.log(error);
             subscription && subscription.unsubscribe();
-            client.close('500');
+            client.close('502');
           },
-          complete: () => client.close('500'),
+          complete: () => client.close('503'),
         });
         client.once('close', () => subscription && subscription.unsubscribe());
       } catch (err) {
-        client.close('500');
+        console.log(err)
+        client.close('504');
       }
     });
   });

@@ -17,4 +17,4 @@ import { ServeStaticModule } from '@nestjs/serve-static';
   ],
   providers: [AppwriteService, ConfigService],
 })
-export class AppModule {}
+export class AppModule { }

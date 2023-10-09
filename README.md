@@ -70,3 +70,4 @@ export class RealtimeService {
 export default RealtimeService;
 ```
 
+Just copy and paste that code to [cra-template-appwrite](https://www.npmjs.com/package/cra-template-appwrite) and enjoy long polling appwrite events

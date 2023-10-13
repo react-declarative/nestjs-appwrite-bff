@@ -21,7 +21,10 @@ const list = async ({ query }) => {
 
   searchParams.set("limit", limit.toString());
   searchParams.set("offset", offset.toString());
-  searchParams.set("category_id", category_id.toString());
+
+  if (category_id) {
+    searchParams.set("category_id", category_id.toString());
+  }
 
   const response = await axios.get(url);
 
